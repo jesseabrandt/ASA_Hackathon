@@ -1,2 +1,3 @@
 .api_key_openai
 .Rproj.user
+set_environmental_variables.py
