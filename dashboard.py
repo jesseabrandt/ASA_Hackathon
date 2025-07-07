@@ -14,6 +14,8 @@ client = OpenAI()
 # Much of this code should probably be moved to a function in a separate file
 if "new_recording" not in st.session_state:
     st.session_state.new_recording = True
+if "response_list" not in st.session_state:
+    st.session_state.response_list = pd.DataFrame(columns = ["sentence", "type"])
 
 if audio_value:
     
