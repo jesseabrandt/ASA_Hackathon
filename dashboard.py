@@ -1,13 +1,16 @@
-import streamlit as st
+# to run, once you have installed the packages, run the following command in the terminal:
+# streamlit run dashboard.py
+import streamlit as st #streamlit for web app
 from openai import OpenAI
-import set_environmental_variables
+import set_environmental_variables # This file should set the environment variables for OpenAI API key (see google doc)
 import pandas as pd
 import numpy as np
 
-top = st.container()
-def new_recording():
+top = st.container() # container for the top part of the app interface (audio input, transcription, and classification button)
+
+def new_recording(): 
     st.session_state.new_recording = True
-audio_value = top.audio_input("Record a voice message", on_change= new_recording)
+audio_value = top.audio_input("Record a voice message", on_change= new_recording)#recording widget
 
 client = OpenAI()
 # initialize session state variable new_recording. 
@@ -18,6 +21,7 @@ if "new_recording" not in st.session_state:
 if "response_list" not in st.session_state:
     st.session_state.response_list = pd.DataFrame(columns = ["sentence", "type"])
 
+# function to classify sentences using openai
 # can be moved to different file possibly
 def classify_sentences():
     # Split the transcription into sentences
@@ -57,11 +61,11 @@ if audio_value:
             model="gpt-4o-transcribe",
             file=audio_value
         )
-    st.session_state.new_recording = False
+        st.session_state.new_recording = False
+    #editable transcription text area
     st.session_state.transcript.text = top.text_area("Transcription:", st.session_state.transcript.text)
-    top.button("Classify", on_click=classify_sentences)
-    # should edits trigger reclassification? Or maybe a button to reclassify?
-    # either way, some of this should be moved to a function
+    top.button("Classify", on_click=classify_sentences)#classification button - rename to something more intuitive?
+
     
 
 
