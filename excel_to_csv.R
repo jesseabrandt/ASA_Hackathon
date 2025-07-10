@@ -67,3 +67,6 @@ activities <- map(files, \(x)read_excel(x, sheet = "Activities")) %>%
 
 text_data <- bind_rows(sleep_activities, observations, activities)
 write_csv(text_data, "data/text_data.csv")
+
+all_data <- full_join(text_data, numerical_data)
+write_csv(all_data, "data/full_dataset.csv")
