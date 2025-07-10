@@ -8,27 +8,36 @@ files <- Sys.glob("Patient X data files/*.xlsx") |>
 
 #Numerical Data
 #TODO: handle duplicates
-heart_rate <- map(files, \(x)read_excel(x, sheet = "Heart Rate")) %>%
-  bind_rows() %>%
-  #mutate(across(-Date, parse_number)) %>%
-  group_by(Date) %>% #handle duplicates
-  summarize(Min = min(Min), Max = max(Max), Avg = mean(Avg), Median = median(Median)) %>%
-  rename_with(~paste0(.x, " Heart Rate"), -Date)
+
+#function to read a sheet from each file
+read_numerical_sheet <- function(sheet, suffix){
+  df <- map(files, \(x) tryCatch({
+    read_excel(x, sheet = sheet)},
+    error = function(msg){
+      return(data.frame())
+    }
+    )) %>%
+    bind_rows() %>%
+    #mutate(across(-Date, parse_number)) %>%
+    group_by(Date) %>% #handle duplicates
+    summarize(Min = min(Min), Max = max(Max), Avg = mean(Avg), Median = median(Median)) %>%
+    rename_with(~paste0(.x, paste0(" ", suffix)), -Date)
+  return(df)
+}
+
+heart_rate <- read_numerical_sheet("Heart Rate","Heart Rate")
+oxygen_level <- read_numerical_sheet("Oxygen Level", "Oxygen Level")
+breathing_rate <- read_numerical_sheet("Breathing Rate", "Breathing Rate")
+#why are there two values? so I can later make this function work for sleep too
+
+#function won't work for sleep - different values
 sleep <- map(files, \(x)read_excel(x, sheet = "Sleep")) %>%
   bind_rows()%>%
   mutate(across(Light:Total, parse_number)) %>%
   group_by(Date) %>% #handle duplicates
   summarize(across(Light:Total, mean)) %>%
   rename_with(~paste0(.x, " Sleep Observation"), -Date)
-oxygen_level <- map(files, \(x)tryCatch({read_excel(x, sheet = "Oxygen Level")},
-                                        error = function(msg){
-                                          return(data.frame())
-                                        })) %>%
-  bind_rows() %>%
-  #mutate(across(-Date, parse_number)) %>%
-  group_by(Date) %>% #handle duplicates
-  summarize(Min = min(Min), Max = max(Max), Avg = mean(Avg), Median = median(Median))  %>%
-  rename_with(~paste0(.x, " Oxygen Level"), -Date)
+
 breathing_rate <- map(files, \(x)read_excel(x, sheet = "Breathing Rate")) %>%
   bind_rows() %>%
   #mutate(across(-Date, parse_number)) %>%
@@ -43,7 +52,7 @@ numerical_data <- breathing_rate %>%
   full_join(oxygen_level) %>%
   full_join(sleep)
 
-write_csv(numerical_data, "numerical_data.csv")
+write_csv(numerical_data, "data/numerical_data.csv")
 
 #Text Data
 #sleep activities should go in table with observations and activities
@@ -57,4 +66,4 @@ activities <- map(files, \(x)read_excel(x, sheet = "Activities")) %>%
   bind_rows()
 
 text_data <- bind_rows(sleep_activities, observations, activities)
-write_csv(text_data, "text_data.csv")
+write_csv(text_data, "data/text_data.csv")
